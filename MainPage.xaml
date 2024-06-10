@@ -5,13 +5,20 @@
              BackgroundColor="#FFEFD5">
 
     <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
-        <Entry x:Name="CompanyNumberEntry" Placeholder="Enter company number" MaxLength="6" />
-        <Button Text="Select File" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="White" WidthRequest="200" Margin="0,10,0,0" />
+        <Grid>
+            <Entry x:Name="CompanyNumberEntry" Placeholder="Numero de la Empresa" MaxLength="6" TextColor="black" />
+            <BoxView Color="Black" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" />
+        </Grid>
+        <Button Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" />
+        <Button Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" />
+        <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" IsVisible="True" Margin="0,10,0,0" />
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
-            <Label x:Name="SelectedFilePathLabel" Text="No file selected" VerticalOptions="Center" />
-            <Button Text="Upload File" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="White" WidthRequest="200" />
+            <Grid Margin="0,10,10,0" Background="Black">
+                <Grid Margin="1" Background="#FFEFD5">
+                    <Label x:Name="SelectedFilePathLabel" Text="Archivo no seleccionado" VerticalOptions="Center" TextColor="Black" Margin="10"/>
+                </Grid>
+            </Grid>
+            <Button Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
         </StackLayout>
-        <Button Text="Delete File" Clicked="OnDeleteFileButtonClicked" BackgroundColor="#FFA500" TextColor="White" WidthRequest="200" Margin="0,10,0,0" />
-        <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" IsVisible="False" Margin="0,10,0,0" />
     </StackLayout>
 </ContentPage>

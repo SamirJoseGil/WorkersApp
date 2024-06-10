@@ -12,11 +12,13 @@ namespace WorkersApp
     {
         private string selectedFilePath;
 
+        // Llamar el componente
         public MainPage()
         {
             InitializeComponent();
         }
 
+        // Boton seleccionar un Archivo
         private async void OnSelectFileButtonClicked(object sender, EventArgs e)
         {
             var result = await FilePicker.Default.PickAsync();
@@ -27,29 +29,31 @@ namespace WorkersApp
             }
         }
 
+        // Boton Eliminar Archivo
         private void OnDeleteFileButtonClicked(object sender, EventArgs e)
         {
             selectedFilePath = null;
-            SelectedFilePathLabel.Text = "No file selected";
+            SelectedFilePathLabel.Text = "Archivo no seleccionado";
         }
 
+        // Boton Subir Archivo
         private async void OnUploadButtonClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(CompanyNumberEntry.Text))
             {
-                await DisplayAlert("Error", "Please enter a company number.", "OK");
+                await DisplayAlert("Error", "Porfavor coloca el Numero de la Empresa", "OK");
                 return;
             }
 
             if (CompanyNumberEntry.Text.Length != 6)
             {
-                await DisplayAlert("Error", "Company number must be 6 digits long.", "OK");
+                await DisplayAlert("Error", "El Numero no puede ser Mayor a 6 digitos", "OK");
                 return;
             }
 
             if (selectedFilePath == null)
             {
-                await DisplayAlert("Error", "Please select a file.", "OK");
+                await DisplayAlert("Error", "Porfavor selecciona un Archivo", "OK");
                 return;
             }
 
@@ -61,7 +65,7 @@ namespace WorkersApp
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+                await DisplayAlert("Error", $"Ocurrio un Error: {ex.Message}", "OK");
             }
             finally
             {
@@ -69,6 +73,7 @@ namespace WorkersApp
             }
         }
 
+        // Conectar con el Servicio
         private async Task UploadFileAsync(string filePath, string companyNumber)
         {
             var serverUrl = $"http://localhost:8081/files/upload/{companyNumber}";
@@ -96,7 +101,8 @@ namespace WorkersApp
             }
         }
     }
-
+    
+    // Logica para Conectar - Enviar archivos
     public class ProgressableStreamContent : HttpContent
     {
         private readonly HttpContent _content;
