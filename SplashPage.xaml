@@ -2,9 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkersApp.SplashPage"
-             BackgroundColor="#FFA500">
+             BackgroundColor="#FFDAB9">
 
     <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
-        <Label Text="Welcome to WorkersApp" TextColor="White" FontSize="24" HorizontalOptions="Center" />
+        <Label Text="Bienvenido a esta Aplicacion para Subir Archivos" TextColor="black" FontSize="24" HorizontalOptions="Center" />
     </StackLayout>
 </ContentPage>
