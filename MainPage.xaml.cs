@@ -11,49 +11,86 @@ namespace WorkersApp
     public partial class MainPage : ContentPage
     {
         private string selectedFilePath;
+        // Archivos permitidos
+        private readonly string[] allowedExtensions = { ".rar", ".zip" };
 
-        // Llamar el componente
         public MainPage()
         {
             InitializeComponent();
+            CompanyNumberEntry.TextChanged += OnCompanyNumberEntryTextChanged;
         }
 
-        // Boton seleccionar un Archivo
+        // Label del numero de la compania
+        private void OnCompanyNumberEntryTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (CompanyNumberEntry.Text.Length == App.PasswordLength)
+            {
+                SelectFileButton.IsVisible = true;
+            }
+            else
+            {
+                SelectFileButton.IsVisible = false;
+                UploadFileLayout.IsVisible = false;
+                UploadFileButton.IsVisible = false;
+                DeleteFileButton.IsVisible = false;
+                UploadProgressBar.IsVisible = false;
+            }
+        }
+
+        // Boton seleccionar Archivo
         private async void OnSelectFileButtonClicked(object sender, EventArgs e)
         {
             var result = await FilePicker.Default.PickAsync();
             if (result != null)
             {
                 selectedFilePath = result.FullPath;
-                SelectedFilePathLabel.Text = Path.GetFileName(selectedFilePath);
+                if (IsAllowedFileType(selectedFilePath))
+                {
+                    SelectedFilePathLabel.Text = Path.GetFileName(selectedFilePath);
+                    DeleteFileButton.IsVisible = true;
+                    UploadFileButton.IsVisible = true;
+                    UploadFileLayout.IsVisible = true;
+                    UploadProgressBar.IsVisible = true;
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Tipo de archivo no permitido. Seleccione un archivo .rar o .zip.", "OK");
+                    selectedFilePath = null;
+                    SelectedFilePathLabel.Text = "Ningún archivo seleccionado";
+                }
             }
         }
 
-        // Boton Eliminar Archivo
+
+        // Boton seleccionar Archivo
         private void OnDeleteFileButtonClicked(object sender, EventArgs e)
         {
             selectedFilePath = null;
-            SelectedFilePathLabel.Text = "Archivo no seleccionado";
+            SelectedFilePathLabel.Text = "Ningún archivo seleccionado";
+            DeleteFileButton.IsVisible = false;
+            UploadFileButton.IsVisible = false;
+            UploadFileLayout.IsVisible = false;
         }
 
-        // Boton Subir Archivo
+
+        // Boton subir Archivo
         private async void OnUploadButtonClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(CompanyNumberEntry.Text))
             {
-                await DisplayAlert("Error", "Porfavor coloca el Numero de la Empresa", "OK");
+                await DisplayAlert("Error", "Por favor, ingrese el número de la empresa.", "OK");
                 return;
             }
 
-            if (CompanyNumberEntry.Text.Length != 6)
+            if (CompanyNumberEntry.Text.Length != App.PasswordLength)
             {
-                await DisplayAlert("Error", "El Numero no puede ser Mayor a 6 digitos", "OK");
+                await DisplayAlert("Error", $"El número de la empresa debe tener {App.PasswordLength} dígitos.", "OK");
                 return;
             }
 
             if (selectedFilePath == null)
             {
-                await DisplayAlert("Error", "Porfavor selecciona un Archivo", "OK");
+                await DisplayAlert("Error", "Por favor, seleccione un archivo.", "OK");
                 return;
             }
 
@@ -65,7 +102,7 @@ namespace WorkersApp
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Ocurrio un Error: {ex.Message}", "OK");
+                await DisplayAlert("Error", $"Ocurrió un error: {ex.Message}", "OK");
             }
             finally
             {
@@ -73,9 +110,25 @@ namespace WorkersApp
             }
         }
 
-        // Conectar con el Servicio
+        // Verificar la extension del archivo ".rar"
+        private bool IsAllowedFileType(string filePath)
+        {
+            string fileExtension = Path.GetExtension(filePath).ToLower();
+            foreach (var extension in allowedExtensions)
+            {
+                if (fileExtension == extension)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        // Conexion con el servicio
         private async Task UploadFileAsync(string filePath, string companyNumber)
         {
+            // Url
             var serverUrl = $"http://localhost:8081/files/upload/{companyNumber}";
             var fileInfo = new FileInfo(filePath);
             var totalBytes = fileInfo.Length;
@@ -83,26 +136,45 @@ namespace WorkersApp
             var buffer = new byte[bufferSize];
 
             using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-            using (var httpClient = new HttpClient())
-            {
-                var content = new MultipartFormDataContent();
-                var streamContent = new StreamContent(fileStream);
-                streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                content.Add(streamContent, "file", Path.GetFileName(filePath));
-
-                var progressContent = new ProgressableStreamContent(content, bufferSize, (sentBytes) =>
+            {   
+                // Time out 30 seg
+                using (var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(30) })
                 {
-                    UploadProgressBar.Progress = (double)sentBytes / totalBytes;
-                });
+                    var content = new MultipartFormDataContent();
+                    var streamContent = new StreamContent(fileStream);
+                    streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                    content.Add(streamContent, "file", Path.GetFileName(filePath));
 
-                var response = await httpClient.PostAsync(serverUrl, progressContent);
-                var responseMessage = await response.Content.ReadAsStringAsync();
-                await DisplayAlert("Upload Status", responseMessage, "OK");
+                    var progressContent = new ProgressableStreamContent(content, bufferSize, (sentBytes) =>
+                    {
+                        UploadProgressBar.Progress = (double)sentBytes / totalBytes;
+                    });
+
+                    var response = await httpClient.PostAsync(serverUrl, progressContent);
+                    var responseMessage = await response.Content.ReadAsStringAsync();
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                    {
+                        await DisplayAlert("Error", "El archivo ya existe.", "OK");
+                    }
+                    else if (response.StatusCode == System.Net.HttpStatusCode.UnsupportedMediaType)
+                    {
+                        await DisplayAlert("Error", "Tipo de archivo no permitido.", "OK");
+                    }
+                    else if (!response.IsSuccessStatusCode)
+                    {
+                        await DisplayAlert("Error", responseMessage, "OK");
+                    }
+                    else
+                    {
+                        await DisplayAlert("Estado de la subida", responseMessage, "OK");
+                    }
+                }
             }
         }
     }
-    
-    // Logica para Conectar - Enviar archivos
+
+    // Barra de progreso
     public class ProgressableStreamContent : HttpContent
     {
         private readonly HttpContent _content;

@@ -6,19 +6,19 @@
 
     <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
         <Grid>
-            <Entry x:Name="CompanyNumberEntry" Placeholder="Numero de la Empresa" MaxLength="6" TextColor="black" />
+            <Entry x:Name="CompanyNumberEntry" Placeholder="Numero de la Empresa" MaxLength="{Binding Path=PasswordLength}" TextChanged="OnCompanyNumberEntryTextChanged" TextColor="black" />
             <BoxView Color="Black" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" />
         </Grid>
-        <Button Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" />
-        <Button Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" />
-        <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" IsVisible="True" Margin="0,10,0,0" />
-        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10">
+        <Button x:Name="SelectFileButton" Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
+        <Button x:Name="DeleteFileButton" Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="Red" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
+        <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" IsVisible="False" Margin="0,10,0,0" />
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10" IsVisible="False" x:Name="UploadFileLayout">
             <Grid Margin="0,10,10,0" Background="Black">
                 <Grid Margin="1" Background="#FFEFD5">
                     <Label x:Name="SelectedFilePathLabel" Text="Archivo no seleccionado" VerticalOptions="Center" TextColor="Black" Margin="10"/>
                 </Grid>
             </Grid>
-            <Button Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+            <Button x:Name="UploadFileButton" Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
         </StackLayout>
     </StackLayout>
 </ContentPage>
