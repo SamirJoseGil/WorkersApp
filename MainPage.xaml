@@ -10,8 +10,9 @@
             <BoxView Color="Black" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" />
         </Grid>
         <Button x:Name="SelectFileButton" Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
+        <Label x:Name="FileSizeLabel" Text="Tamaño del archivo: 0 MB" TextColor="black" IsVisible="False"/>
         <Button x:Name="DeleteFileButton" Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="Red" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
-        <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" IsVisible="False" Margin="0,10,0,0" />
+        <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" IsVisible="False" Margin="0,10,0,0" BackgroundColor="Gray" ProgressColor="Orange" />
         <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10" IsVisible="False" x:Name="UploadFileLayout">
             <Grid Margin="0,10,10,0" Background="Black">
                 <Grid Margin="1" Background="#FFEFD5">
