@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WorkersApp
@@ -9,7 +10,8 @@ namespace WorkersApp
     public partial class MainPage : ContentPage
     {
         private string selectedFilePath;
-        private readonly string[] allowedExtensions = { ".rar", ".zip" };
+        private FileUploader fileUploader;
+        private long totalBytesToTransfer;
 
         public MainPage()
         {
@@ -17,85 +19,91 @@ namespace WorkersApp
             CompanyNumberEntry.TextChanged += OnCompanyNumberEntryTextChanged;
         }
 
+        // Valida la longitud del número de la empresa y muestra la UI de selección de archivo si es válido
         private void OnCompanyNumberEntryTextChanged(object sender, TextChangedEventArgs e)
         {
-            if (CompanyNumberEntry.Text.Length == App.PasswordLength)
+            int length = CompanyNumberEntry.Text.Length;
+
+            if (length != App.PasswordLength)
             {
-                SelectFileButton.IsVisible = true;
+                ErrorMessageLabel.Text = $"El número de la empresa debe tener {App.PasswordLength} caracteres.";
+                ErrorMessageLabel.IsVisible = true;
+                SelectFileButton.IsVisible = false;
+                UploadFileButton.IsVisible = false; // Ocultar también el botón de subir archivo si el número no tiene la longitud correcta
             }
             else
             {
-                SelectFileButton.IsVisible = false;
-                UploadFileLayout.IsVisible = false;
-                UploadFileButton.IsVisible = false;
-                DeleteFileButton.IsVisible = false;
-                UploadProgressBar.IsVisible = false;
-                FileSizeLabel.IsVisible = false;
+                ErrorMessageLabel.IsVisible = false;
+                SelectFileButton.IsVisible = true;
+                UploadFileButton.IsVisible = true; // Mostrar el botón de subir archivo cuando el número tiene la longitud correcta
             }
         }
 
+        // Maneja la selección de archivo y actualiza la UI en consecuencia
         private async void OnSelectFileButtonClicked(object sender, EventArgs e)
         {
             var result = await FilePicker.Default.PickAsync();
             if (result != null)
             {
                 selectedFilePath = result.FullPath;
-                if (IsAllowedFileType(selectedFilePath))
-                {
-                    var fileInfo = new FileInfo(selectedFilePath);
-                    SelectedFilePathLabel.Text = Path.GetFileName(selectedFilePath);
-                    FileSizeLabel.Text = $"Tamaño del archivo: {fileInfo.Length / (1024.0 * 1024.0):F2} MB";
-                    FileSizeLabel.IsVisible = true;
-                    DeleteFileButton.IsVisible = true;
-                    UploadFileButton.IsVisible = true;
-                    UploadFileLayout.IsVisible = true;
-                    UploadProgressBar.IsVisible = true;
-                }
-                else
-                {
-                    await DisplayAlert("Error", "Tipo de archivo no permitido. Seleccione un archivo .rar o .zip.", "OK");
-                    selectedFilePath = null;
-                    SelectedFilePathLabel.Text = "Ningún archivo seleccionado";
-                    FileSizeLabel.IsVisible = false;
-                }
+                var fileInfo = new FileInfo(selectedFilePath);
+                SelectedFilePathLabel.Text = Path.GetFileName(selectedFilePath);
+                FileSizeLabel.Text = $"Tamaño del archivo: {fileInfo.Length / (1024.0 * 1024.0):F2} MB";
+                SelectedFilePathLabel.IsVisible = true;
+                FileSizeLabel.IsVisible = true;
+                UploadFileButton.IsVisible = true;
             }
         }
 
+        // Maneja la acción de eliminar archivo y actualiza la UI
         private void OnDeleteFileButtonClicked(object sender, EventArgs e)
         {
             selectedFilePath = null;
             SelectedFilePathLabel.Text = "Ningún archivo seleccionado";
-            DeleteFileButton.IsVisible = false;
+            SelectedFilePathLabel.IsVisible = false;
             UploadFileButton.IsVisible = false;
-            UploadFileLayout.IsVisible = false;
-            FileSizeLabel.IsVisible = false;
         }
 
+        // Maneja la acción de subir archivo y actualiza la UI
         private async void OnUploadButtonClicked(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(CompanyNumberEntry.Text))
-            {
-                await DisplayAlert("Error", "Por favor, ingrese el número de la empresa.", "OK");
-                return;
-            }
-
-            if (CompanyNumberEntry.Text.Length != App.PasswordLength)
-            {
-                await DisplayAlert("Error", $"El número de la empresa debe tener {App.PasswordLength} dígitos.", "OK");
-                return;
-            }
-
-            if (selectedFilePath == null)
-            {
-                await DisplayAlert("Error", "Por favor, seleccione un archivo.", "OK");
-                return;
-            }
-
             try
             {
-                UploadProgressBar.IsVisible = true;
-                UploadProgressBar.Progress = 0;
-                await UploadFileAsync(selectedFilePath, CompanyNumberEntry.Text);
+                if (string.IsNullOrWhiteSpace(CompanyNumberEntry.Text))
+                {
+                    await DisplayAlert("Error", "Por favor, ingrese el número de la empresa.", "OK");
+                    return;
+                }
+
+                if (CompanyNumberEntry.Text.Length != App.PasswordLength)
+                {
+                    await DisplayAlert("Error", $"El número de la empresa debe tener {App.PasswordLength} caracteres.", "OK");
+                    return;
+                }
+
+                if (selectedFilePath == null)
+                {
+                    await DisplayAlert("Error", "Por favor, seleccione un archivo.", "OK");
+                    return;
+                }
+
+                // Ocultar botones y mostrar progreso
+                UploadFileButton.IsVisible = false;
+                SelectFileButton.IsVisible = false;
+                ProgressStack.IsVisible = true;
+
+                // Iniciar la carga del archivo
+                fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel);
+                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30)); // Timeout de 30 segundos
+                var progress = new Progress<long>(bytesTransferred =>
+                {
+                    ProgressCallback(bytesTransferred);
+                });
+
+                await fileUploader.UploadFileAsync(selectedFilePath, CompanyNumberEntry.Text, cancellationTokenSource.Token, progress);
+
+                // Mostrar mensaje de éxito si es necesario
+                await DisplayAlert("Éxito", "Archivo subido correctamente.", "OK");
             }
             catch (Exception ex)
             {
@@ -103,71 +111,22 @@ namespace WorkersApp
             }
             finally
             {
-                UploadProgressBar.IsVisible = false;
+                // Restaurar visibilidad de botones y ocultar progreso al finalizar
+                UploadFileButton.IsVisible = true;
+                SelectFileButton.IsVisible = true;
+                ProgressStack.IsVisible = false;
             }
         }
 
-        private bool IsAllowedFileType(string filePath)
+        // Método para actualizar la barra de progreso
+        private void ProgressCallback(long bytesTransferred)
         {
-            string fileExtension = Path.GetExtension(filePath).ToLower();
-            foreach (var extension in allowedExtensions)
+            double progress = (double)bytesTransferred / totalBytesToTransfer; // Calcular el progreso real
+            Device.BeginInvokeOnMainThread(() =>
             {
-                if (fileExtension == extension)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private async Task UploadFileAsync(string filePath, string companyNumber)
-        {
-            var serverAddress = "127.0.0.1";
-            var port = 5000;
-            var fileInfo = new FileInfo(filePath);
-            var totalBytes = fileInfo.Length;
-            var bufferSize = 4096;
-            var buffer = new byte[bufferSize];
-
-            try
-            {
-                using (var client = new TcpClient())
-                {
-                    await client.ConnectAsync(serverAddress, port);
-                    using (var networkStream = client.GetStream())
-                    {
-                        var companyNumberBytes = System.Text.Encoding.UTF8.GetBytes(companyNumber + "\n");
-                        await networkStream.WriteAsync(companyNumberBytes, 0, companyNumberBytes.Length);
-
-                        using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                        {
-                            int bytesRead;
-                            long totalBytesRead = 0;
-
-                            while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                            {
-                                totalBytesRead += bytesRead;
-                                await networkStream.WriteAsync(buffer, 0, bytesRead);
-                                UploadProgressBar.Progress = (double)totalBytesRead / totalBytes;
-                            }
-                        }
-                    }
-                }
-
-                await DisplayAlert("Estado de la subida", "Archivo subido correctamente", "OK");
-            }
-            catch (SocketException se)
-            {
-                await DisplayAlert("Error", $"Error de socket: {se.Message}", "OK");
-            }
-            catch (IOException ioe)
-            {
-                await DisplayAlert("Error", $"Error de IO: {ioe.Message}", "OK");
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Error", $"Error: {ex.Message}", "OK");
-            }
+                UploadProgressBar.Progress = progress;
+                ProgressPercentageLabel.Text = $"{progress:P2}";
+            });
         }
     }
 }
