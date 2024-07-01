@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Maui.Controls;
 
 namespace WorkersApp
 {
@@ -17,55 +18,66 @@ namespace WorkersApp
             progressPercentageLabel = progressLabel;
         }
 
-        // Sube el archivo al servidor
+        // Método para subir el archivo al servidor
         public async Task UploadFileAsync(string filePath, string companyNumber, CancellationToken cancellationToken, IProgress<long> progress)
         {
-            var serverAddress = "127.0.0.1";
-            var port = 5000;
+            // Dirección IP pública
+            string serverAddress = "181.138.138.58";
+            int port = 5001;
+            long fileSize = new FileInfo(filePath).Length;
+            long offset = 0;
 
             try
             {
                 using (var client = new TcpClient())
                 {
-                    // Configurar timeout de 30 segundos
-                    var timeout = TimeSpan.FromSeconds(30);
-                    using (var cancellationTokenSource = new CancellationTokenSource(timeout))
-                    {
-                        await client.ConnectAsync(serverAddress, port, cancellationTokenSource.Token);
-                        using (var networkStream = client.GetStream())
-                        using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-                        {
-                            // Enviar número de empresa
-                            var companyNumberBytes = System.Text.Encoding.UTF8.GetBytes(companyNumber + "\n");
-                            await networkStream.WriteAsync(companyNumberBytes, 0, companyNumberBytes.Length, cancellationToken);
+                    await client.ConnectAsync(serverAddress, port, cancellationToken);
 
-                            // Transferir archivo usando Stream y reportar progreso
-                            var totalBytes = fileStream.Length;
-                            progress.Report(0); // Iniciar progreso en 0%
-                            long bytesTransferred = 0;
-                            byte[] buffer = new byte[4096];
-                            int bytesRead;
-                            while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
-                            {
-                                await networkStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
-                                bytesTransferred += bytesRead;
-                                progress.Report(bytesTransferred); // Reportar el progreso actual
-                            }
+                    using (var networkStream = client.GetStream())
+                    using (var binaryWriter = new BinaryWriter(networkStream))
+                    using (var binaryReader = new BinaryReader(networkStream))
+                    using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                    {
+                        // Enviar número de empresa
+                        binaryWriter.Write(companyNumber);
+                        // Enviar nombre del archivo
+                        binaryWriter.Write(Path.GetFileName(filePath));
+                        // Enviar tamaño del archivo
+                        binaryWriter.Write(fileSize);
+
+                        // Leer el estado del servidor
+                        string serverResponse = binaryReader.ReadString();
+                        if (serverResponse == "El archivo ya existe y está completo")
+                        {
+                            Console.WriteLine("El archivo ya existe y está completo.");
+                            return;
+                        }
+                        else if (serverResponse != "Continuar")
+                        {
+                            Console.WriteLine("Error: " + serverResponse);
+                            return;
+                        }
+
+                        // Leer el offset del servidor
+                        offset = binaryReader.ReadInt64();
+                        fileStream.Seek(offset, SeekOrigin.Begin);
+
+                        // Transferir archivo en paquetes pequeños y reportar progreso
+                        byte[] buffer = new byte[5 * 1024 * 1024]; // Paquetes de 5 MB
+                        int bytesRead;
+                        long bytesTransferred = offset;
+
+                        while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                        {
+                            await networkStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                            bytesTransferred += bytesRead;
+                            progress.Report(bytesTransferred); // Reportar el progreso actual
+
+                            // Mostrar progreso en consola
+                            Console.WriteLine($"Progreso: {bytesTransferred}/{fileSize} bytes ({(bytesTransferred * 100.0 / fileSize):F2}%)");
                         }
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-                throw new Exception("Imposible conectar al servidor. Por favor, inténtelo de nuevo más tarde o revise su conexión a internet.");
-            }
-            catch (SocketException se)
-            {
-                throw new Exception($"Error de socket: {se.Message}");
-            }
-            catch (IOException ioe)
-            {
-                throw new Exception($"Error de IO: {ioe.Message}");
             }
             catch (Exception ex)
             {
