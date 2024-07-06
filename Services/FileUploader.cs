@@ -5,25 +5,26 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 
-namespace WorkersApp
+namespace WorkersApp.Services
 {
     public class FileUploader
     {
         private readonly ProgressBar uploadProgressBar;
         private readonly Label progressPercentageLabel;
+        private readonly Configuration config;
 
-        public FileUploader(ProgressBar progressBar, Label progressLabel)
+        public FileUploader(ProgressBar progressBar, Label progressLabel, Configuration configuration)
         {
             uploadProgressBar = progressBar;
             progressPercentageLabel = progressLabel;
+            config = configuration ?? throw new ArgumentNullException(nameof(configuration), "La configuración no puede ser nula");
         }
 
         // Método para subir el archivo al servidor
         public async Task UploadFileAsync(string filePath, string companyNumber, CancellationToken cancellationToken, IProgress<long> progress)
         {
-            // Dirección IP pública
-            string serverAddress = "181.138.138.58";
-            int port = 5001;
+            string serverAddress = config.ServerIP;
+            int port = config.ServerPort;
             long fileSize = new FileInfo(filePath).Length;
             long offset = 0;
 

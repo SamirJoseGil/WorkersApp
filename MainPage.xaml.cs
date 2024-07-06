@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using WorkersApp.Services;
 
 namespace WorkersApp
 {
@@ -11,11 +12,23 @@ namespace WorkersApp
         private string selectedFilePath;
         private FileUploader fileUploader;
         private long totalBytesToTransfer;
+        private Configuration config;
 
         public MainPage()
         {
             InitializeComponent();
             CompanyNumberEntry.TextChanged += OnCompanyNumberEntryTextChanged;
+            LoadConfiguration();
+        }
+
+        private async void LoadConfiguration()
+        {
+            ConfigManager configManager = new ConfigManager();
+            config = await configManager.LoadConfigAsync();
+            if (config == null)
+            {
+                await DisplayAlert("Error", "Error al cargar la configuración.", "OK");
+            }
         }
 
         // Maneja el evento de cambio de texto del campo de número de empresa
@@ -100,7 +113,7 @@ namespace WorkersApp
                 ProgressStack.IsVisible = true;
 
                 // Inicia la subida del archivo en un hilo separado
-                fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel);
+                fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel, config);
                 var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(30)); // Aumenta el tiempo de espera a 30 minutos
                 var progress = new Progress<long>(bytesTransferred =>
                 {

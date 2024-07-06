@@ -2,6 +2,7 @@
 using System.IO;
 using Newtonsoft.Json.Linq; // Importar el espacio de nombres necesario
 using Application = Microsoft.Maui.Controls.Application;
+using WorkersApp.Pages;
 
 namespace WorkersApp
 {
@@ -27,7 +28,7 @@ namespace WorkersApp
             }
             else
             {
-                PasswordLength = 6; // Default value
+                PasswordLength = 6; // Valor por defecto
             }
         }
     }
