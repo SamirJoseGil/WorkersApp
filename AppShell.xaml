@@ -8,7 +8,7 @@
 
     <Shell.Resources>
         <Style x:Key="MyShellStyle" TargetType="Element">
-            <Setter Property="Shell.BackgroundColor" Value="#FFDAB9" />
+            <Setter Property="Shell.BackgroundColor" Value="#FF4500" />
             <Setter Property="Shell.TitleColor" Value="Black"/>
         </Style>
     </Shell.Resources>

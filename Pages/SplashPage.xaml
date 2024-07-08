@@ -6,5 +6,6 @@
 
     <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
         <Label Text="Bienvenido" TextColor="black" FontAttributes="Bold" FontFamily="Lobster" FontSize="56" HorizontalOptions="Center" />
+        <Label x:Name="LoadingConfigLabel" Text="Cargando configuraciones de usuario..." TextColor="black" FontSize="16" HorizontalOptions="Center" IsVisible="True"/>
     </StackLayout>
 </ContentPage>

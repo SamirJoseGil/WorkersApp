@@ -6,26 +6,33 @@
 
     <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
         <Grid>
-            <Entry x:Name="CompanyNumberEntry" Placeholder="Número de la Empresa" MaxLength="6" TextChanged="OnCompanyNumberEntryTextChanged" TextColor="black" />
-            <BoxView Color="Black" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" />
+            <Entry x:Name="CompanyNameEntry" Placeholder="Nombre de la Empresa" TextChanged="OnCompanyNameEntryTextChanged" TextColor="black" FontSize="20"/>
+            <BoxView Color="#FF4500" HeightRequest="1" HorizontalOptions="FillAndExpand" VerticalOptions="End" />
         </Grid>
         <Label x:Name="ErrorMessageLabel" TextColor="Red" IsVisible="False" />
-        <Grid Margin="0,10,10,0" BackgroundColor="Black">
-            <Grid Margin="1" BackgroundColor="#FFEFD5">
-                <Label x:Name="SelectedFilePathLabel" Text="Archivo no seleccionado" VerticalOptions="Center" TextColor="Black" Margin="10" IsVisible="False"/>
+        <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="FileInfoStack" Margin="0,10,0,5">
+            <Grid Margin="0,10,5,0" BackgroundColor="Black">
+                <Grid Margin="1" BackgroundColor="#FFEFD5">
+                    <Label x:Name="SelectedFilePathLabel" Text="Archivo no seleccionado" VerticalOptions="Center" TextColor="Black" Margin="10,10,10,10" FontSize="16" IsVisible="False"/>
+                </Grid>
             </Grid>
-        </Grid>
+            <Grid Margin="0,10,0,0" BackgroundColor="Black">
+                <Grid Margin="1" BackgroundColor="#FFEFD5">
+                    <Label x:Name="FileSizeLabel" Text="0 MB" TextColor="Black" Margin="10,10,10,10" FontSize="16" BackgroundColor="#FFEFD5"/>
+                </Grid>
+            </Grid>
+        </StackLayout>
         <Button x:Name="SelectFileButton" Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
-        <Label x:Name="FileSizeLabel" Text="Tamaño del archivo: 0 MB" TextColor="black" IsVisible="False"/>
-        <Button x:Name="UploadFileButton" Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
+        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10" IsVisible="False" x:Name="ActionButtonsStack">
+            <Button x:Name="UploadFileButton" Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+            <Button x:Name="DeleteFileButton" Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="#FF4500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+            <Button x:Name="PauseUploadButton" Text="Pausar" Clicked="OnPauseUploadButtonClicked" BackgroundColor="#FFD700" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
+        </StackLayout>
+        <Label x:Name="NotificationLabel" TextColor="Black" IsVisible="False" Margin="10" HorizontalOptions="Center"/>
         <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="ProgressStack">
-            <ProgressBar x:Name="UploadProgressBar" WidthRequest="300" HeightRequest="20" BackgroundColor="Gray" ProgressColor="Orange" />
+            <ProgressBar x:Name="UploadProgressBar" WidthRequest="400" HeightRequest="40" BackgroundColor="Gray" ProgressColor="Orange" />
             <Label x:Name="ProgressPercentageLabel" Text="0%" TextColor="black" VerticalOptions="Center" Margin="10,0,0,0"/>
         </StackLayout>
-        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10" IsVisible="False" x:Name="UploadFileLayout">
-            <Button x:Name="PauseUploadButton" Text="Pausar" BackgroundColor="Yellow" TextColor="black" WidthRequest="100" Margin="0,10,0,0" IsVisible="False"/>
-            <Button x:Name="CancelUploadButton" Text="Cancelar" BackgroundColor="Red" TextColor="black" WidthRequest="100" Margin="0,10,0,0" IsVisible="False"/>
-            <Button x:Name="DeleteFileButton" Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="Red" TextColor="black" WidthRequest="100" Margin="0,10,0,0" IsVisible="False"/>
-        </StackLayout>
+        <Label x:Name="BottomRightMessageLabel" TextColor="Black" IsVisible="False" Margin="10" HorizontalOptions="End" VerticalOptions="End"/>
     </StackLayout>
 </ContentPage>

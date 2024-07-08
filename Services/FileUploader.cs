@@ -21,7 +21,7 @@ namespace WorkersApp.Services
         }
 
         // Método para subir el archivo al servidor
-        public async Task UploadFileAsync(string filePath, string companyNumber, CancellationToken cancellationToken, IProgress<long> progress)
+        public async Task UploadFileAsync(string filePath, string companyName, CancellationToken cancellationToken, IProgress<long> progress)
         {
             string serverAddress = config.ServerIP;
             int port = config.ServerPort;
@@ -39,8 +39,8 @@ namespace WorkersApp.Services
                     using (var binaryReader = new BinaryReader(networkStream))
                     using (var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                     {
-                        // Enviar número de empresa
-                        binaryWriter.Write(companyNumber);
+                        // Enviar nombre de la empresa
+                        binaryWriter.Write(companyName);
                         // Enviar nombre del archivo
                         binaryWriter.Write(Path.GetFileName(filePath));
                         // Enviar tamaño del archivo

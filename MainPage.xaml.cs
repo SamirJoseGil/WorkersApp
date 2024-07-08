@@ -1,6 +1,7 @@
 ﻿using Microsoft.Maui.Controls;
 using System;
 using System.IO;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using WorkersApp.Services;
@@ -13,137 +14,163 @@ namespace WorkersApp
         private FileUploader fileUploader;
         private long totalBytesToTransfer;
         private Configuration config;
+        private CancellationTokenSource uploadCancellationTokenSource;
 
         public MainPage()
         {
             InitializeComponent();
-            CompanyNumberEntry.TextChanged += OnCompanyNumberEntryTextChanged;
+            CompanyNameEntry.TextChanged += OnCompanyNameEntryTextChanged;
             LoadConfiguration();
         }
 
+        // Cargar la configuración de usuario
         private async void LoadConfiguration()
         {
+            ShowBottomRightMessage("Cargando configuraciones de usuario...");
+            await Task.Delay(1000); // Espera de 1 segundo para simular carga
             ConfigManager configManager = new ConfigManager();
             config = await configManager.LoadConfigAsync();
             if (config == null)
             {
                 await DisplayAlert("Error", "Error al cargar la configuración.", "OK");
+                return;
             }
+            HideBottomRightMessage();
         }
 
-        // Maneja el evento de cambio de texto del campo de número de empresa
-        private void OnCompanyNumberEntryTextChanged(object sender, TextChangedEventArgs e)
+        // Entrada de texto de la empresa
+        private void OnCompanyNameEntryTextChanged(object sender, TextChangedEventArgs e)
         {
-            int length = CompanyNumberEntry.Text.Length;
-
-            if (length != App.PasswordLength)
+            if (string.IsNullOrWhiteSpace(CompanyNameEntry.Text))
             {
-                // Muestra un mensaje de error si la longitud del número de empresa es incorrecta
-                ErrorMessageLabel.Text = $"El número de la empresa debe tener {App.PasswordLength} caracteres.";
+                ErrorMessageLabel.Text = "Por favor, ingrese el nombre de la empresa.";
                 ErrorMessageLabel.IsVisible = true;
                 SelectFileButton.IsVisible = false;
-                UploadFileButton.IsVisible = false;
+                ActionButtonsStack.IsVisible = false;
+                FileInfoStack.IsVisible = false;
             }
             else
             {
-                // Oculta el mensaje de error y muestra los botones de selección y subida de archivo
                 ErrorMessageLabel.IsVisible = false;
                 SelectFileButton.IsVisible = true;
-                UploadFileButton.IsVisible = true;
+                ActionButtonsStack.IsVisible = false;
+                FileInfoStack.IsVisible = false;
             }
         }
 
-        // Maneja el evento de clic del botón para seleccionar archivo
+        // Botón de seleccionar archivo
         private async void OnSelectFileButtonClicked(object sender, EventArgs e)
         {
             var result = await FilePicker.Default.PickAsync();
             if (result != null)
             {
-                // Actualiza la UI con la información del archivo seleccionado
                 selectedFilePath = result.FullPath;
                 var fileInfo = new FileInfo(selectedFilePath);
                 SelectedFilePathLabel.Text = Path.GetFileName(selectedFilePath);
-                FileSizeLabel.Text = $"Tamaño del archivo: {fileInfo.Length / (1024.0 * 1024.0):F2} MB";
+                FileSizeLabel.Text = $"{(fileInfo.Length / (1024.0 * 1024.0)):F2} MB";
                 SelectedFilePathLabel.IsVisible = true;
                 FileSizeLabel.IsVisible = true;
+                FileInfoStack.IsVisible = true;
+                SelectFileButton.IsVisible = false;
+                ActionButtonsStack.IsVisible = true;
+                DeleteFileButton.IsVisible = true;
                 UploadFileButton.IsVisible = true;
                 totalBytesToTransfer = fileInfo.Length;
             }
         }
 
-        // Maneja el evento de clic del botón para eliminar el archivo seleccionado
+        // Botón de eliminar archivo
         private void OnDeleteFileButtonClicked(object sender, EventArgs e)
         {
-            // Restablece la UI cuando se elimina un archivo
             selectedFilePath = null;
-            SelectedFilePathLabel.Text = "Ningún archivo seleccionado";
+            SelectedFilePathLabel.Text = "Archivo no seleccionado";
+            FileSizeLabel.Text = "0 MB";
             SelectedFilePathLabel.IsVisible = false;
-            UploadFileButton.IsVisible = false;
+            FileSizeLabel.IsVisible = false;
+            FileInfoStack.IsVisible = false;
+            SelectFileButton.IsVisible = true;
+            ActionButtonsStack.IsVisible = false;
+            NotificationLabel.IsVisible = false;
         }
 
-        // Maneja el evento de clic del botón para subir el archivo
+        // Botón de subir archivo
         private async void OnUploadButtonClicked(object sender, EventArgs e)
         {
             try
             {
-                // Verifica que el número de la empresa esté completo
-                if (string.IsNullOrWhiteSpace(CompanyNumberEntry.Text))
+                if (string.IsNullOrWhiteSpace(CompanyNameEntry.Text))
                 {
-                    await DisplayAlert("Error", "Por favor, ingrese el número de la empresa.", "OK");
+                    await DisplayAlert("Error", "Por favor, ingrese el nombre de la empresa.", "OK");
                     return;
                 }
 
-                // Verifica que el número de la empresa tenga la longitud correcta
-                if (CompanyNumberEntry.Text.Length != App.PasswordLength)
-                {
-                    await DisplayAlert("Error", $"El número de la empresa debe tener {App.PasswordLength} caracteres.", "OK");
-                    return;
-                }
-
-                // Verifica que se haya seleccionado un archivo
                 if (selectedFilePath == null)
                 {
                     await DisplayAlert("Error", "Por favor, seleccione un archivo.", "OK");
                     return;
                 }
 
-                // Oculta botones y muestra la barra de progreso
+                NotificationLabel.Text = "Cargando archivo...";
+                NotificationLabel.IsVisible = true;
+
+                await Task.Delay(2000); // Espera de 2 segundos para simular carga
+
+                NotificationLabel.IsVisible = false;
                 UploadFileButton.IsVisible = false;
                 SelectFileButton.IsVisible = false;
+                DeleteFileButton.IsVisible = false;
+                PauseUploadButton.IsVisible = true;
                 ProgressStack.IsVisible = true;
 
-                // Inicia la subida del archivo en un hilo separado
                 fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel, config);
-                var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(30)); // Aumenta el tiempo de espera a 30 minutos
+                uploadCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(30));
                 var progress = new Progress<long>(bytesTransferred =>
                 {
                     ProgressCallback(bytesTransferred);
                 });
 
-                await Task.Run(() => fileUploader.UploadFileAsync(selectedFilePath, CompanyNumberEntry.Text, cancellationTokenSource.Token, progress));
+                await Task.Run(() => fileUploader.UploadFileAsync(selectedFilePath, CompanyNameEntry.Text, uploadCancellationTokenSource.Token, progress));
 
-                // Muestra mensaje de éxito
                 await DisplayAlert("Éxito", "Archivo subido correctamente.", "OK");
+            }
+            catch (OperationCanceledException)
+            {
+                // Manejo de pausa sin mostrar mensaje de error
+                PauseUploadButton.IsVisible = false;
+                UploadFileButton.IsVisible = false;
+                DeleteFileButton.IsVisible = false;
+            }
+            catch (SocketException)
+            {
+                await DisplayAlert("Error", "No se pudo conectar al servidor. Por favor, inténtelo de nuevo más tarde.", "OK");
+            }
+            catch (IOException)
+            {
+                await DisplayAlert("Error", "Ocurrió un error al leer o escribir el archivo. Por favor, inténtelo de nuevo.", "OK");
             }
             catch (Exception ex)
             {
-                // Muestra mensaje de error
                 await DisplayAlert("Error", $"Ocurrió un error: {ex.Message}", "OK");
             }
             finally
             {
-                // Restaura visibilidad de botones y oculta barra de progreso
                 UploadFileButton.IsVisible = true;
-                SelectFileButton.IsVisible = true;
+                SelectFileButton.IsVisible = false;
+                DeleteFileButton.IsVisible = true;
+                PauseUploadButton.IsVisible = false;
                 ProgressStack.IsVisible = false;
-
-                // Limpia el texto de progreso
                 ProgressPercentageLabel.Text = "0%";
                 UploadProgressBar.Progress = 0;
             }
         }
 
-        // Método para actualizar la barra de progreso
+        // Botón de pausa
+        private void OnPauseUploadButtonClicked(object sender, EventArgs e)
+        {
+            uploadCancellationTokenSource?.Cancel();
+        }
+
+        // Llamado a la barra de progreso
         private void ProgressCallback(long bytesTransferred)
         {
             double progress = (double)bytesTransferred / totalBytesToTransfer;
@@ -152,6 +179,18 @@ namespace WorkersApp
                 UploadProgressBar.Progress = progress;
                 ProgressPercentageLabel.Text = $"{progress:P2}";
             });
+        }
+
+        // Mostrar mensaje de carga de usuario
+        private void ShowBottomRightMessage(string message)
+        {
+            BottomRightMessageLabel.Text = message;
+            BottomRightMessageLabel.IsVisible = true;
+        }
+
+        private void HideBottomRightMessage()
+        {
+            BottomRightMessageLabel.IsVisible = false;
         }
     }
 }

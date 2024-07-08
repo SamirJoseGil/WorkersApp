@@ -15,10 +15,20 @@ namespace WorkersApp.Pages
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+
+            LoadingConfigLabel.IsVisible = true;
             await Task.Delay(3000); // Espera 3 segundos
 
             ConfigManager configManager = new ConfigManager();
-            Configuration config = await configManager.LoadConfigAsync();
+            Configuration config = null;
+            try
+            {
+                config = await configManager.LoadConfigAsync();
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"Error al cargar la configuración: {ex.Message}", "OK");
+            }
 
             if (config == null)
             {
