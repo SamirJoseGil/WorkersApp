@@ -20,6 +20,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 
+		<WindowsPackageType>None</WindowsPackageType>
+
 		<!-- Display name -->
 		<ApplicationTitle>WorkersApp</ApplicationTitle>
 
