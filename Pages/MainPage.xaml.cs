@@ -1,36 +1,40 @@
-﻿using Microsoft.Maui.Controls;
-using System;
+﻿using System;
 using System.IO;
-using System.Net.Sockets;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Maui.Controls;
 using WorkersApp.Services;
+using WorkersApp.Models;
 
-namespace WorkersApp
+namespace WorkersApp.Pages
 {
     public partial class MainPage : ContentPage
     {
-        private string selectedFilePath;
-        private FileUploader fileUploader;
-        private long totalBytesToTransfer;
-        private Configuration config;
-        private CancellationTokenSource uploadCancellationTokenSource;
+        private string _selectedFilePath;
+        private long _totalBytesToTransfer;
+        private CancellationTokenSource _uploadCancellationTokenSource;
+        private Configuration _config;
+        private readonly string _username;
+        private readonly string _companyNumber;
+        private string _password; // Definimos _password
 
-        public MainPage()
+        public MainPage(string username, string companyNumber)
         {
             InitializeComponent();
-            CompanyNameEntry.TextChanged += OnCompanyNameEntryTextChanged;
+            _username = username;
+            _companyNumber = companyNumber;
             LoadConfiguration();
         }
 
-        // Cargar la configuración de usuario
         private async void LoadConfiguration()
         {
             ShowBottomRightMessage("Cargando configuraciones de usuario...");
-            await Task.Delay(1000); // Espera de 1 segundo para simular carga
-            ConfigManager configManager = new ConfigManager();
-            config = await configManager.LoadConfigAsync();
-            if (config == null)
+            await Task.Delay(1000);
+            var configManager = new ConfigManager();
+            _config = await configManager.LoadConfigAsync();
+            if (_config == null)
             {
                 await DisplayAlert("Error", "Error al cargar la configuración.", "OK");
                 return;
@@ -38,7 +42,6 @@ namespace WorkersApp
             HideBottomRightMessage();
         }
 
-        // Entrada de texto de la empresa
         private void OnCompanyNameEntryTextChanged(object sender, TextChangedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(CompanyNameEntry.Text))
@@ -58,15 +61,14 @@ namespace WorkersApp
             }
         }
 
-        // Botón de seleccionar archivo
         private async void OnSelectFileButtonClicked(object sender, EventArgs e)
         {
             var result = await FilePicker.Default.PickAsync();
             if (result != null)
             {
-                selectedFilePath = result.FullPath;
-                var fileInfo = new FileInfo(selectedFilePath);
-                SelectedFilePathLabel.Text = Path.GetFileName(selectedFilePath);
+                _selectedFilePath = result.FullPath;
+                var fileInfo = new FileInfo(_selectedFilePath);
+                SelectedFilePathLabel.Text = Path.GetFileName(_selectedFilePath);
                 FileSizeLabel.Text = $"{(fileInfo.Length / (1024.0 * 1024.0)):F2} MB";
                 SelectedFilePathLabel.IsVisible = true;
                 FileSizeLabel.IsVisible = true;
@@ -75,14 +77,13 @@ namespace WorkersApp
                 ActionButtonsStack.IsVisible = true;
                 DeleteFileButton.IsVisible = true;
                 UploadFileButton.IsVisible = true;
-                totalBytesToTransfer = fileInfo.Length;
+                _totalBytesToTransfer = fileInfo.Length;
             }
         }
 
-        // Botón de eliminar archivo
         private void OnDeleteFileButtonClicked(object sender, EventArgs e)
         {
-            selectedFilePath = null;
+            _selectedFilePath = null;
             SelectedFilePathLabel.Text = "Archivo no seleccionado";
             FileSizeLabel.Text = "0 MB";
             SelectedFilePathLabel.IsVisible = false;
@@ -93,28 +94,31 @@ namespace WorkersApp
             NotificationLabel.IsVisible = false;
         }
 
-        // Botón de subir archivo
         private async void OnUploadButtonClicked(object sender, EventArgs e)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(CompanyNameEntry.Text))
+                if (string.IsNullOrWhiteSpace(_companyNumber)) // Usamos _companyNumber en vez de CompanyNameEntry.Text
                 {
-                    await DisplayAlert("Error", "Por favor, ingrese el nombre de la empresa.", "OK");
+                    await DisplayAlert("Error", "No se encontró el nombre de la empresa.", "OK");
                     return;
                 }
-
-                if (selectedFilePath == null)
+                if (_selectedFilePath == null)
                 {
                     await DisplayAlert("Error", "Por favor, seleccione un archivo.", "OK");
                     return;
                 }
 
+                var isValid = await ValidateCredentialsAsync(_username, _password, _companyNumber); // Usamos _companyNumber
+                if (!isValid)
+                {
+                    await DisplayAlert("Error", "Credenciales inválidas.", "OK");
+                    return;
+                }
+
                 NotificationLabel.Text = "Cargando archivo...";
                 NotificationLabel.IsVisible = true;
-
-                await Task.Delay(2000); // Espera de 2 segundos para simular carga
-
+                await Task.Delay(2000);
                 NotificationLabel.IsVisible = false;
                 UploadFileButton.IsVisible = false;
                 SelectFileButton.IsVisible = false;
@@ -122,66 +126,84 @@ namespace WorkersApp
                 PauseUploadButton.IsVisible = true;
                 ProgressStack.IsVisible = true;
 
-                fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel, config);
-                uploadCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(30));
                 var progress = new Progress<long>(bytesTransferred =>
                 {
                     ProgressCallback(bytesTransferred);
                 });
 
-                await Task.Run(() => fileUploader.UploadFileAsync(selectedFilePath, CompanyNameEntry.Text, uploadCancellationTokenSource.Token, progress));
-
+                _uploadCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+                var fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel, _config);
+                await fileUploader.UploadFileAsync(_selectedFilePath, _companyNumber, _username, _password, _uploadCancellationTokenSource.Token, progress); // Usamos _companyNumber
                 await DisplayAlert("Éxito", "Archivo subido correctamente.", "OK");
             }
             catch (OperationCanceledException)
             {
-                // Manejo de pausa sin mostrar mensaje de error
                 PauseUploadButton.IsVisible = false;
                 UploadFileButton.IsVisible = false;
                 DeleteFileButton.IsVisible = false;
             }
-            catch (SocketException)
-            {
-                await DisplayAlert("Error", "No se pudo conectar al servidor. Por favor, inténtelo de nuevo más tarde.", "OK");
-            }
-            catch (IOException)
-            {
-                await DisplayAlert("Error", "Ocurrió un error al leer o escribir el archivo. Por favor, inténtelo de nuevo.", "OK");
-            }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Ocurrió un error: {ex.Message}", "OK");
+                string errorMessage = ex.Message switch
+                {
+                    "No se pudo conectar al servidor" => "No se pudo conectar al servidor. Por favor, inténtelo de nuevo más tarde.",
+                    "Tiempo de espera agotado" => "El tiempo de espera se ha agotado. Por favor, inténtelo de nuevo.",
+                    _ => $"{ex.Message}"
+                };
+                await DisplayAlert("Error", errorMessage, "OK");
             }
             finally
             {
                 UploadFileButton.IsVisible = true;
-                SelectFileButton.IsVisible = false;
+                SelectFileButton.IsVisible = true;
                 DeleteFileButton.IsVisible = true;
                 PauseUploadButton.IsVisible = false;
                 ProgressStack.IsVisible = false;
-                ProgressPercentageLabel.Text = "0%";
-                UploadProgressBar.Progress = 0;
             }
         }
 
-        // Botón de pausa
-        private void OnPauseUploadButtonClicked(object sender, EventArgs e)
+        private async Task<bool> ValidateCredentialsAsync(string username, string password, string companyNumber)
         {
-            uploadCancellationTokenSource?.Cancel();
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var serverUrl = $"http://{_config.ServerIP}:{_config.ServerPort}/api/auth/validate";
+                    var response = await client.PostAsJsonAsync(serverUrl, new { Username = username, Password = password });
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var user = await response.Content.ReadFromJsonAsync<User>();
+                        if (user != null && user.CompanyNumber == companyNumber)
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
-        // Llamado a la barra de progreso
         private void ProgressCallback(long bytesTransferred)
         {
-            double progress = (double)bytesTransferred / totalBytesToTransfer;
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                UploadProgressBar.Progress = progress;
-                ProgressPercentageLabel.Text = $"{progress:P2}";
-            });
+            double progress = (double)bytesTransferred / _totalBytesToTransfer;
+            UploadProgressBar.Progress = progress;
+            ProgressPercentageLabel.Text = $"{progress:P2}";
         }
 
-        // Mostrar mensaje de carga de usuario
+        private void OnPauseUploadButtonClicked(object sender, EventArgs e)
+        {
+            _uploadCancellationTokenSource?.Cancel();
+            PauseUploadButton.IsVisible = false;
+            UploadFileButton.IsVisible = true;
+            SelectFileButton.IsVisible = true;
+            DeleteFileButton.IsVisible = true;
+            ProgressStack.IsVisible = false;
+        }
+
         private void ShowBottomRightMessage(string message)
         {
             BottomRightMessageLabel.Text = message;

@@ -1,7 +1,7 @@
 using Microsoft.Maui.Controls;
 using System.Threading.Tasks;
-using WorkersApp.Pages;
 using WorkersApp.Services;
+using WorkersApp.Models;
 
 namespace WorkersApp.Pages
 {
@@ -15,20 +15,11 @@ namespace WorkersApp.Pages
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-
             LoadingConfigLabel.IsVisible = true;
             await Task.Delay(3000); // Espera 3 segundos
 
-            ConfigManager configManager = new ConfigManager();
-            Configuration config = null;
-            try
-            {
-                config = await configManager.LoadConfigAsync();
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Error", $"Error al cargar la configuración: {ex.Message}", "OK");
-            }
+            var configManager = new ConfigManager();
+            var config = await configManager.LoadConfigAsync();
 
             if (config == null)
             {
@@ -36,7 +27,7 @@ namespace WorkersApp.Pages
             }
             else
             {
-                Application.Current.MainPage = new MainPage(); // Cambia a la página principal
+                Application.Current.MainPage = new NavigationPage(new LoginPage()); // Cambia a la página de inicio de sesión
             }
         }
     }

@@ -1,5 +1,6 @@
 using Microsoft.Maui.Controls;
 using System;
+using WorkersApp.Models;
 using WorkersApp.Services;
 
 namespace WorkersApp.Pages
@@ -20,11 +21,11 @@ namespace WorkersApp.Pages
                 return;
             }
 
-            Configuration config = new Configuration { ServerIP = serverIP, ServerPort = serverPort };
-            ConfigManager configManager = new ConfigManager();
+            var config = new Configuration { ServerIP = serverIP, ServerPort = serverPort };
+            var configManager = new ConfigManager();
             await configManager.SaveConfigAsync(config);
 
-            Application.Current.MainPage = new MainPage(); // Cambia a la página principal
+            Application.Current.MainPage = new NavigationPage(new LoginPage());
         }
     }
 }

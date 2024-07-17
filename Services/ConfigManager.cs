@@ -2,47 +2,45 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using WorkersApp.Models;
 
-namespace WorkersApp
+namespace WorkersApp.Services
 {
     public class ConfigManager
     {
-        private readonly string configFilePath;
+        private const string ConfigFileName = "config.json";
 
-        public ConfigManager()
+        public async Task SaveConfigAsync(Configuration config)
         {
-            string exePath = AppDomain.CurrentDomain.BaseDirectory;
-            string configDir = Path.Combine(exePath, "userConfig");
-            if (!Directory.Exists(configDir))
+            try
             {
-                Directory.CreateDirectory(configDir);
+                string configJson = JsonSerializer.Serialize(config);
+                string configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ConfigFileName);
+                await File.WriteAllTextAsync(configFilePath, configJson);
             }
-            configFilePath = Path.Combine(configDir, "config.json");
+            catch (Exception ex)
+            {
+                throw new Exception("Error saving config: " + ex.Message);
+            }
         }
 
         public async Task<Configuration> LoadConfigAsync()
         {
-            if (File.Exists(configFilePath))
+            try
             {
+                string configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ConfigFileName);
+                if (!File.Exists(configFilePath))
+                {
+                    return null;
+                }
+
                 string configJson = await File.ReadAllTextAsync(configFilePath);
                 return JsonSerializer.Deserialize<Configuration>(configJson);
             }
-            else
+            catch (Exception ex)
             {
-                return null;
+                throw new Exception("Error loading config: " + ex.Message);
             }
         }
-
-        public async Task SaveConfigAsync(Configuration config)
-        {
-            string configJson = JsonSerializer.Serialize(config);
-            await File.WriteAllTextAsync(configFilePath, configJson);
-        }
-    }
-
-    public class Configuration
-    {
-        public string ServerIP { get; set; }
-        public int ServerPort { get; set; }
     }
 }
