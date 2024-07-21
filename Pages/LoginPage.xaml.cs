@@ -1,4 +1,7 @@
 using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using WorkersApp.Models;
 using WorkersApp.Services;
@@ -44,7 +47,7 @@ namespace WorkersApp.Pages
                 var (user, errorMessage) = await _authService.AuthenticateUserAsync(username, password);
                 if (user != null)
                 {
-                    await Navigation.PushAsync(new MainPage(user.Username, user.CompanyNumber));
+                    await Navigation.PushAsync(new MainPage(user.Username, user.CompanyName));
                 }
                 else
                 {

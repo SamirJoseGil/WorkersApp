@@ -1,6 +1,7 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using WorkersApp.Models;
 
 namespace WorkersApp.Services
 {
@@ -46,11 +47,5 @@ namespace WorkersApp.Services
                 return (null, $"Error inesperado: {ex.Message}");
             }
         }
-    }
-
-    public class User
-    {
-        public string Username { get; set; }
-        public string CompanyNumber { get; set; }
     }
 }

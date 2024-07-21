@@ -1,12 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
-using WorkersApp.Services;
 using WorkersApp.Models;
+using WorkersApp.Services;
 
 namespace WorkersApp.Pages
 {
@@ -17,14 +16,14 @@ namespace WorkersApp.Pages
         private CancellationTokenSource _uploadCancellationTokenSource;
         private Configuration _config;
         private readonly string _username;
-        private readonly string _companyNumber;
-        private string _password; // Definimos _password
+        private readonly string _companyName;
 
-        public MainPage(string username, string companyNumber)
+        public MainPage(string username, string companyName)
         {
             InitializeComponent();
             _username = username;
-            _companyNumber = companyNumber;
+            _companyName = companyName;
+            CompanyNameLabel.Text = _companyName;
             LoadConfiguration();
         }
 
@@ -40,25 +39,6 @@ namespace WorkersApp.Pages
                 return;
             }
             HideBottomRightMessage();
-        }
-
-        private void OnCompanyNameEntryTextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(CompanyNameEntry.Text))
-            {
-                ErrorMessageLabel.Text = "Por favor, ingrese el nombre de la empresa.";
-                ErrorMessageLabel.IsVisible = true;
-                SelectFileButton.IsVisible = false;
-                ActionButtonsStack.IsVisible = false;
-                FileInfoStack.IsVisible = false;
-            }
-            else
-            {
-                ErrorMessageLabel.IsVisible = false;
-                SelectFileButton.IsVisible = true;
-                ActionButtonsStack.IsVisible = false;
-                FileInfoStack.IsVisible = false;
-            }
         }
 
         private async void OnSelectFileButtonClicked(object sender, EventArgs e)
@@ -98,21 +78,9 @@ namespace WorkersApp.Pages
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(_companyNumber)) // Usamos _companyNumber en vez de CompanyNameEntry.Text
-                {
-                    await DisplayAlert("Error", "No se encontró el nombre de la empresa.", "OK");
-                    return;
-                }
                 if (_selectedFilePath == null)
                 {
                     await DisplayAlert("Error", "Por favor, seleccione un archivo.", "OK");
-                    return;
-                }
-
-                var isValid = await ValidateCredentialsAsync(_username, _password, _companyNumber); // Usamos _companyNumber
-                if (!isValid)
-                {
-                    await DisplayAlert("Error", "Credenciales inválidas.", "OK");
                     return;
                 }
 
@@ -133,7 +101,10 @@ namespace WorkersApp.Pages
 
                 _uploadCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(30));
                 var fileUploader = new FileUploader(UploadProgressBar, ProgressPercentageLabel, _config);
-                await fileUploader.UploadFileAsync(_selectedFilePath, _companyNumber, _username, _password, _uploadCancellationTokenSource.Token, progress); // Usamos _companyNumber
+
+                Console.WriteLine($"Uploading file: {_selectedFilePath}, Company: {_companyName}");
+
+                await fileUploader.UploadFileAsync(_selectedFilePath, _companyName, _uploadCancellationTokenSource.Token, progress);
                 await DisplayAlert("Éxito", "Archivo subido correctamente.", "OK");
             }
             catch (OperationCanceledException)
@@ -151,6 +122,7 @@ namespace WorkersApp.Pages
                     _ => $"{ex.Message}"
                 };
                 await DisplayAlert("Error", errorMessage, "OK");
+                Console.WriteLine($"Error uploading file: {errorMessage}");
             }
             finally
             {
@@ -159,31 +131,6 @@ namespace WorkersApp.Pages
                 DeleteFileButton.IsVisible = true;
                 PauseUploadButton.IsVisible = false;
                 ProgressStack.IsVisible = false;
-            }
-        }
-
-        private async Task<bool> ValidateCredentialsAsync(string username, string password, string companyNumber)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    var serverUrl = $"http://{_config.ServerIP}:{_config.ServerPort}/api/auth/validate";
-                    var response = await client.PostAsJsonAsync(serverUrl, new { Username = username, Password = password });
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var user = await response.Content.ReadFromJsonAsync<User>();
-                        if (user != null && user.CompanyNumber == companyNumber)
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
             }
         }
 

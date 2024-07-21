@@ -1,9 +1,10 @@
-﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkersApp.Pages.MainPage"
              BackgroundColor="#FFEFD5">
     <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
-        <Entry x:Name="CompanyNameEntry" Placeholder="Nombre de la Empresa" TextChanged="OnCompanyNameEntryTextChanged" TextColor="black" FontSize="20"/>
+        <Label x:Name="CompanyNameLabel" TextColor="Black" FontSize="20"/>
         <Label x:Name="ErrorMessageLabel" TextColor="Red" IsVisible="False" />
         <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="FileInfoStack" Margin="0,10,0,5">
             <Grid Margin="0,10,5,0" BackgroundColor="Black">
