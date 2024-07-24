@@ -19,5 +19,5 @@ Esta aplicación de .NET MAUI proporciona una interfaz de usuario para que los u
 
 ## Autor
 
-Samir Jose Gil
+Samir Gil
 

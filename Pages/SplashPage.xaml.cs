@@ -15,7 +15,7 @@ namespace WorkersApp.Pages
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LoadingConfigLabel.IsVisible = true;
+            LoadingConfigLabel.IsVisible = true; // Muestra el mensaje de carga
             await Task.Delay(3000); // Espera 3 segundos
 
             var configManager = new ConfigManager();
@@ -23,11 +23,13 @@ namespace WorkersApp.Pages
 
             if (config == null)
             {
-                Application.Current.MainPage = new ConfigPage(); // Cambia a la página de configuración
+                // Cambia a la página de configuración
+                Application.Current!.MainPage = new ConfigPage();
             }
             else
             {
-                Application.Current.MainPage = new NavigationPage(new LoginPage()); // Cambia a la página de inicio de sesión
+                // Cambia a la página de inicio de sesión
+                Application.Current!.MainPage = new NavigationPage(new LoginPage());
             }
         }
     }

@@ -3,8 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkersApp.Pages.SplashPage"
              BackgroundColor="#FFDAB9">
+    <!-- Contenedor principal con alineación vertical y horizontal centrada -->
     <StackLayout VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
+        <!-- Etiqueta de bienvenida -->
         <Label Text="Bienvenido" TextColor="black" FontAttributes="Bold" FontFamily="Lobster" FontSize="56" HorizontalOptions="Center" />
+        <!-- Etiqueta de carga de configuraciones -->
         <Label x:Name="LoadingConfigLabel" Text="Cargando configuraciones de usuario..." TextColor="black" FontSize="16" HorizontalOptions="Center" IsVisible="True"/>
     </StackLayout>
 </ContentPage>

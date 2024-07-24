@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!-- Declaración del archivo XAML y la codificación -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkersApp.Pages.LoginPage"
              BackgroundColor="#FFEFD5">
+    <!-- Página de contenido con un fondo de color -->
     <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
+        <!-- Contenedor de diseño apilado con relleno y opciones de alineación -->
         <Entry x:Name="UsernameEntry" Placeholder="Nombre de Usuario" TextColor="black" FontSize="20"/>
+        <!-- Campo de entrada para el nombre de usuario -->
         <Entry x:Name="PasswordEntry" Placeholder="Contraseña" IsPassword="True" TextColor="black" FontSize="20"/>
+        <!-- Campo de entrada para la contraseña, con el texto oculto -->
         <Button Text="Iniciar Sesión" Clicked="OnLoginButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+        <!-- Botón para iniciar sesión, con un evento de clic manejado en el code-behind -->
     </StackLayout>
 </ContentPage>

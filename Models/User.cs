@@ -1,7 +1,11 @@
-﻿namespace WorkersApp.Models;
-
-public class User
+﻿namespace WorkersApp.Models
 {
-    public string Username { get; set; }
-    public string CompanyName { get; set; }
+    public class User
+    {
+        // Nombre de usuario.
+        public string Username { get; set; } = string.Empty;
+
+        // Nombre de la empresa.
+        public string CompanyName { get; set; } = string.Empty;
+    }
 }

@@ -2,7 +2,10 @@
 {
     public class Configuration
     {
-        public string ServerIP { get; set; }
+        // Dirección IP del servidor.
+        public string ServerIP { get; set; } = string.Empty;
+
+        // Puerto del servidor.
         public int ServerPort { get; set; }
     }
 }
