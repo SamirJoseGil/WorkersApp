@@ -3,49 +3,54 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="WorkersApp.Pages.MainPage"
              BackgroundColor="#FFEFD5">
-    <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
-        <!-- Etiqueta para mostrar el nombre de la empresa -->
-        <Label x:Name="CompanyNameLabel" TextColor="Black" FontSize="20" HorizontalOptions="Center" />
+    <Grid>
+        <StackLayout Padding="10" VerticalOptions="CenterAndExpand" HorizontalOptions="Center">
+            <!-- Etiqueta para mostrar el nombre de la empresa -->
+            <Label x:Name="CompanyNameLabel" TextColor="Black" FontSize="20" HorizontalOptions="Center" />
 
-        <!-- Etiqueta para mostrar mensajes de error -->
-        <Label x:Name="ErrorMessageLabel" TextColor="Red" IsVisible="False" />
+            <!-- Etiqueta para mostrar mensajes de error -->
+            <Label x:Name="ErrorMessageLabel" TextColor="Red" IsVisible="False" />
 
-        <!-- Contenedor para la información del archivo seleccionado -->
-        <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="FileInfoStack" Margin="0,10,0,5">
-            <Grid Margin="0,10,5,0" BackgroundColor="Black">
-                <Grid Margin="1" BackgroundColor="#FFEFD5">
-                    <!-- Etiqueta para mostrar la ruta del archivo seleccionado -->
-                    <Label x:Name="SelectedFilePathLabel" Text="Archivo no seleccionado" VerticalOptions="Center" TextColor="Black" Margin="10,10,10,10" FontSize="16" IsVisible="False"/>
+            <!-- Contenedor para la información del archivo seleccionado -->
+            <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="FileInfoStack" Margin="0,10,0,5">
+                <Grid Margin="0,10,5,0" BackgroundColor="Black" HorizontalOptions="Center">
+                    <Grid Margin="1" BackgroundColor="#FFEFD5">
+                        <!-- Etiqueta para mostrar la ruta del archivo seleccionado -->
+                        <Label x:Name="SelectedFilePathLabel" Text="Archivo no seleccionado" VerticalOptions="Center" HorizontalOptions="Center" TextColor="Black" Margin="10,10,10,10" FontSize="16" IsVisible="False"/>
+                    </Grid>
                 </Grid>
-            </Grid>
-            <Grid Margin="0,10,0,0" BackgroundColor="Black">
-                <Grid Margin="1" BackgroundColor="#FFEFD5">
-                    <!-- Etiqueta para mostrar el tamaño del archivo -->
-                    <Label x:Name="FileSizeLabel" Text="0 MB" TextColor="Black" Margin="10,10,10,10" FontSize="16" BackgroundColor="#FFEFD5"/>
+                <Grid Margin="0,10,0,0" BackgroundColor="Black" HorizontalOptions="Center">
+                    <Grid Margin="1" BackgroundColor="#FFEFD5">
+                        <!-- Etiqueta para mostrar el tamaño del archivo -->
+                        <Label x:Name="FileSizeLabel" Text="0 MB" TextColor="Black" Margin="10,10,10,10" FontSize="16" BackgroundColor="#FFEFD5" HorizontalOptions="Center"/>
+                    </Grid>
                 </Grid>
-            </Grid>
+            </StackLayout>
+
+            <!-- Botón para seleccionar un archivo -->
+            <Button x:Name="SelectFileButton" Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="{Binding IsNotUploading}"/>
+
+            <!-- Contenedor para los botones de acción -->
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10" IsVisible="False" x:Name="ActionButtonsStack">
+                <!-- Botón para subir el archivo -->
+                <Button x:Name="UploadFileButton" Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+                <!-- Botón para eliminar el archivo -->
+                <Button x:Name="DeleteFileButton" Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="#FF4500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+                <!-- Botón para pausar la subida del archivo -->
+                <Button x:Name="CancelUploadButton" Text="Pausar" Clicked="OnCancelUploadButtonClicked" BackgroundColor="#FFD700" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
+            </StackLayout>
+
+            <!-- Contenedor para la barra de progreso -->
+            <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="ProgressStack">
+                <ProgressBar x:Name="UploadProgressBar" WidthRequest="400" HeightRequest="40" BackgroundColor="Gray" ProgressColor="Orange" />
+                <Label x:Name="ProgressPercentageLabel" Text="0%" TextColor="black" VerticalOptions="Center" Margin="10,0,0,0"/>
+            </StackLayout>
+
+            <!-- Etiqueta para mostrar mensajes en la parte inferior derecha -->
+            <Label x:Name="BottomRightMessageLabel" TextColor="Black" IsVisible="False" Margin="10" HorizontalOptions="End" VerticalOptions="End"/>
         </StackLayout>
 
-        <!-- Botón para seleccionar un archivo -->
-        <Button x:Name="SelectFileButton" Text="Seleccionar Archivo" Clicked="OnSelectFileButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
-
-        <!-- Contenedor para los botones de acción -->
-        <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="10" IsVisible="False" x:Name="ActionButtonsStack">
-            <!-- Botón para subir el archivo -->
-            <Button x:Name="UploadFileButton" Text="Subir Archivo" Clicked="OnUploadButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
-            <!-- Botón para eliminar el archivo -->
-            <Button x:Name="DeleteFileButton" Text="Eliminar Archivo" Clicked="OnDeleteFileButtonClicked" BackgroundColor="#FF4500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
-            <!-- Botón para pausar la subida del archivo -->
-            <Button x:Name="CancelUploadButton" Text="Pausar" Clicked="OnCancelUploadButtonClicked" BackgroundColor="#FFD700" TextColor="black" WidthRequest="200" Margin="0,10,0,0" IsVisible="False"/>
-        </StackLayout>
-
-        <!-- Contenedor para la barra de progreso -->
-        <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False" x:Name="ProgressStack">
-            <ProgressBar x:Name="UploadProgressBar" WidthRequest="400" HeightRequest="40" BackgroundColor="Gray" ProgressColor="Orange" />
-            <Label x:Name="ProgressPercentageLabel" Text="0%" TextColor="black" VerticalOptions="Center" Margin="10,0,0,0"/>
-        </StackLayout>
-
-        <!-- Etiqueta para mostrar mensajes en la parte inferior derecha -->
-        <Label x:Name="BottomRightMessageLabel" TextColor="Black" IsVisible="False" Margin="10" HorizontalOptions="End" VerticalOptions="End"/>
-    </StackLayout>
+        <!-- Botón para volver atrás -->
+        <Button x:Name="BackButton" Text="Volver Atrás" Clicked="OnBackButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="10" HorizontalOptions="Start" VerticalOptions="End"/>
+    </Grid>
 </ContentPage>

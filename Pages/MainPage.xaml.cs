@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
 using WorkersApp.Models;
 using WorkersApp.Services;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace WorkersApp.Pages
 {
-    public partial class MainPage : ContentPage
+    public partial class MainPage : ContentPage, INotifyPropertyChanged
     {
         private string? _selectedFilePath;
         private long _totalBytesToTransfer;
@@ -18,6 +20,17 @@ namespace WorkersApp.Pages
         private readonly string _username;
         private readonly string _companyName;
         private bool _isFilePickerOpen = false;
+        private bool _isUploading;
+
+        public bool IsNotUploading
+        {
+            get => !_isUploading;
+            set
+            {
+                _isUploading = !value;
+                OnPropertyChanged();
+            }
+        }
 
         public MainPage(string username, string companyName)
         {
@@ -28,6 +41,7 @@ namespace WorkersApp.Pages
             LoadConfiguration();
             ShowSelectFileButton();
             _uploadCancellationTokenSource = new CancellationTokenSource(); // Inicializa el campo
+            BindingContext = this;
         }
 
         // Carga la configuración del usuario
@@ -119,6 +133,7 @@ namespace WorkersApp.Pages
                 return;
             }
 
+            IsNotUploading = false;
             UploadFileButton.IsVisible = false;
             SelectFileButton.IsVisible = false;
             DeleteFileButton.IsVisible = false;
@@ -143,7 +158,7 @@ namespace WorkersApp.Pages
                 await fileUploader.UploadFileAsync(_selectedFilePath, _companyName, _uploadCancellationTokenSource.Token, progress, _bytesTransferred);
                 await DisplayAlert("Éxito", "Archivo subido.", "OK");
                 File.Delete($"{_selectedFilePath}.progress");
-                OnDeleteFileButtonClicked(null, null);
+                OnDeleteFileButtonClicked(this, EventArgs.Empty);
             }
             catch (OperationCanceledException)
             {
@@ -161,6 +176,7 @@ namespace WorkersApp.Pages
             {
                 CancelUploadButton.IsVisible = false;
                 ProgressStack.IsVisible = false;
+                IsNotUploading = true;
             }
         }
 
@@ -195,6 +211,19 @@ namespace WorkersApp.Pages
             UploadFileButton.Text = "Continuar";
             UploadFileButton.IsVisible = true;
             DeleteFileButton.IsVisible = true;
+        }
+
+        // Maneja el evento de clic del botón de regresar
+        private async void OnBackButtonClicked(object sender, EventArgs e)
+        {
+            await Navigation.PopAsync();
+        }
+
+        public new event PropertyChangedEventHandler? PropertyChanged;
+
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
