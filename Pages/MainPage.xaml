@@ -51,6 +51,6 @@
         </StackLayout>
 
         <!-- Botón para volver atrás -->
-        <Button x:Name="BackButton" Text="Volver Atrás" Clicked="OnBackButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="10" HorizontalOptions="Start" VerticalOptions="End"/>
+        <Button x:Name="BackButton" Text="Volver Atrás" Clicked="OnBackButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="120" Margin="4" HorizontalOptions="Start" VerticalOptions="End"/>
     </Grid>
 </ContentPage>

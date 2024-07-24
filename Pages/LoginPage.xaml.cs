@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Maui.Controls;
+using Windows.UI.ApplicationSettings;
 using WorkersApp.Models;
 using WorkersApp.Services;
 
@@ -12,7 +13,6 @@ namespace WorkersApp.Pages
         // Campos para la configuración y el servicio de autenticación.
         private Configuration _config = new Configuration(); // Inicialización
         private AuthService _authService = new AuthService(""); // Inicialización con un valor por defecto
-        private bool _isPasswordVisible = false; // Estado de visibilidad de la contraseña
 
         public LoginPage()
         {
@@ -82,11 +82,17 @@ namespace WorkersApp.Pages
             }
         }
 
-        // Maneja el evento de clic en el botón de mostrar/ocultar contraseña.
-        private void OnShowPasswordButtonClicked(object sender, EventArgs e)
+        // Maneja el evento de cambio de estado del CheckBox.
+        private void OnShowPasswordCheckBoxChanged(object sender, CheckedChangedEventArgs e)
         {
-            _isPasswordVisible = !_isPasswordVisible;
-            PasswordEntry.IsPassword = !_isPasswordVisible;
+            PasswordEntry.IsPassword = !e.Value;
+        }
+
+        // Maneja el evento de clic en el botón de configuraciones.
+        private async void OnSettingsButtonClicked(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new ConfigPage());
         }
     }
 }
+

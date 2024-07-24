@@ -10,19 +10,23 @@
         <Entry x:Name="UsernameEntry" Placeholder="Nombre de Usuario" TextColor="black" FontSize="20"/>
         <!-- Campo de entrada para el nombre de usuario -->
 
-        <Grid>
-            <Entry x:Name="PasswordEntry" Placeholder="Contraseña" IsPassword="True" TextColor="black" FontSize="20"/>
-            <!-- Campo de entrada para la contraseña, con el texto oculto -->
-            <Button Text="👁" 
-                    VerticalOptions="Center" 
-                    HorizontalOptions="End" 
-                    Clicked="OnShowPasswordButtonClicked" 
-                    WidthRequest="40" 
-                    HeightRequest="40" 
-                    BackgroundColor="Transparent" />
-        </Grid>
+        <Entry x:Name="PasswordEntry" Placeholder="Contraseña" IsPassword="True" TextColor="black" FontSize="20"/>
+        <!-- Campo de entrada para la contraseña, con el texto oculto -->
 
-        <Button Text="Iniciar Sesión" Clicked="OnLoginButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
+        <Grid VerticalOptions="Center" HorizontalOptions="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="ShowPasswordCheckBox" CheckedChanged="OnShowPasswordCheckBoxChanged" 
+                      Color="DarkGray" WidthRequest="30" HeightRequest="30" Grid.Column="0"/>
+            <Label Text="Mostrar contraseña" VerticalOptions="Center" TextColor="black" Grid.Column="1" Margin="0,0,80,0"/>
+        </Grid>
+        <!-- Grid para mostrar/ocultar la contraseña -->
+
+        <Button Text="Iniciar Sesión" Clicked="OnLoginButtonClicked" BackgroundColor="#FFA500" TextColor="#333" WidthRequest="200" Margin="0,10,0,0"/>
         <!-- Botón para iniciar sesión, con un evento de clic manejado en el code-behind -->
     </StackLayout>
 </ContentPage>
+
+

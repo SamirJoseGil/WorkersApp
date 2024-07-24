@@ -139,6 +139,7 @@ namespace WorkersApp.Pages
             DeleteFileButton.IsVisible = false;
             CancelUploadButton.IsVisible = true;
             ProgressStack.IsVisible = true;
+            BackButton.IsVisible = false; // Oculta el botón "Volver Atrás" durante la carga
 
             var progress = new Progress<long>(bytesTransferred =>
             {
@@ -177,6 +178,7 @@ namespace WorkersApp.Pages
                 CancelUploadButton.IsVisible = false;
                 ProgressStack.IsVisible = false;
                 IsNotUploading = true;
+                BackButton.IsVisible = true; // Muestra el botón "Volver Atrás" después de la carga
             }
         }
 
