@@ -9,8 +9,19 @@
         <!-- Contenedor de diseño apilado con relleno y opciones de alineación -->
         <Entry x:Name="UsernameEntry" Placeholder="Nombre de Usuario" TextColor="black" FontSize="20"/>
         <!-- Campo de entrada para el nombre de usuario -->
-        <Entry x:Name="PasswordEntry" Placeholder="Contraseña" IsPassword="True" TextColor="black" FontSize="20"/>
-        <!-- Campo de entrada para la contraseña, con el texto oculto -->
+
+        <Grid>
+            <Entry x:Name="PasswordEntry" Placeholder="Contraseña" IsPassword="True" TextColor="black" FontSize="20"/>
+            <!-- Campo de entrada para la contraseña, con el texto oculto -->
+            <Button Text="👁" 
+                    VerticalOptions="Center" 
+                    HorizontalOptions="End" 
+                    Clicked="OnShowPasswordButtonClicked" 
+                    WidthRequest="40" 
+                    HeightRequest="40" 
+                    BackgroundColor="Transparent" />
+        </Grid>
+
         <Button Text="Iniciar Sesión" Clicked="OnLoginButtonClicked" BackgroundColor="#FFA500" TextColor="black" WidthRequest="200" Margin="0,10,0,0"/>
         <!-- Botón para iniciar sesión, con un evento de clic manejado en el code-behind -->
     </StackLayout>

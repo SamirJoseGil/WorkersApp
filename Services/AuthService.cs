@@ -1,5 +1,8 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WorkersApp.Models;
@@ -10,6 +13,8 @@ namespace WorkersApp.Services
     {
         private readonly HttpClient _httpClient;
         private readonly string _serverUrl;
+        private readonly byte[] _key = Encoding.UTF8.GetBytes("A3F256789B1CDEFG"); // Clave de 16 bytes
+        private readonly byte[] _iv = Encoding.UTF8.GetBytes("1234567890ABCDEF"); // Vector de Inicialización de 16 bytes
 
         public AuthService(string serverUrl)
         {
@@ -17,12 +22,37 @@ namespace WorkersApp.Services
             _serverUrl = serverUrl; // URL del servidor donde se valida la autenticación.
         }
 
+        private string EncryptPassword(string plainText)
+        {
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = _key;
+                aesAlg.IV = _iv;
+
+                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+
+                using (var msEncrypt = new System.IO.MemoryStream())
+                {
+                    using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    {
+                        using (var swEncrypt = new StreamWriter(csEncrypt))
+                        {
+                            swEncrypt.Write(plainText);
+                        }
+                        return Convert.ToBase64String(msEncrypt.ToArray());
+                    }
+                }
+            }
+        }
+
         public async Task<(User? user, string? errorMessage)> AuthenticateUserAsync(string username, string password)
         {
+            string encryptedPassword = EncryptPassword(password);
+
             var credentials = new
             {
                 Username = username,
-                Password = password
+                Password = encryptedPassword
             };
 
             try
@@ -71,11 +101,5 @@ namespace WorkersApp.Services
                 return (null, $"Error inesperado: {ex.Message}");
             }
         }
-    }
-
-    // Clase para deserializar la respuesta de error del servidor.
-    public class ErrorResponse
-    {
-        public string? Message { get; set; }
     }
 }

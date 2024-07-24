@@ -12,6 +12,7 @@ namespace WorkersApp.Pages
         // Campos para la configuración y el servicio de autenticación.
         private Configuration _config = new Configuration(); // Inicialización
         private AuthService _authService = new AuthService(""); // Inicialización con un valor por defecto
+        private bool _isPasswordVisible = false; // Estado de visibilidad de la contraseña
 
         public LoginPage()
         {
@@ -79,6 +80,13 @@ namespace WorkersApp.Pages
                 // Maneja cualquier otro tipo de error.
                 await DisplayAlert("Error", $"Error inesperado: {ex.Message}", "OK");
             }
+        }
+
+        // Maneja el evento de clic en el botón de mostrar/ocultar contraseña.
+        private void OnShowPasswordButtonClicked(object sender, EventArgs e)
+        {
+            _isPasswordVisible = !_isPasswordVisible;
+            PasswordEntry.IsPassword = !_isPasswordVisible;
         }
     }
 }
