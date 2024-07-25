@@ -223,7 +223,7 @@ namespace WorkersApp.Pages
 
         public new event PropertyChangedEventHandler? PropertyChanged;
 
-        protected new void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected new void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

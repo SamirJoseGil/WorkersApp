@@ -15,8 +15,8 @@ namespace WorkersApp.Services
         {
             try
             {
-                // Serializa la configuración a formato JSON
-                string configJson = JsonSerializer.Serialize(config);
+                // Serializa la configuración a formato JSON usando el contexto
+                string configJson = JsonSerializer.Serialize(config, ConfigurationJsonContext.Default.Configuration);
                 // Obtiene la ruta completa del archivo de configuración
                 string configFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ConfigFileName);
                 // Escribe el JSON en el archivo
@@ -45,8 +45,8 @@ namespace WorkersApp.Services
 
                 // Lee el contenido del archivo de configuración
                 string configJson = await File.ReadAllTextAsync(configFilePath);
-                // Deserializa el JSON a un objeto Configuration
-                var config = JsonSerializer.Deserialize<Configuration>(configJson);
+                // Deserializa el JSON a un objeto Configuration usando el contexto
+                var config = JsonSerializer.Deserialize<Configuration>(configJson, ConfigurationJsonContext.Default.Configuration);
                 // Verifica que la deserialización no haya retornado null
                 return config ?? new Configuration();
             }
